@@ -103,7 +103,6 @@ def create_top_hits_playlist(access_token, user_id):
 
     return top_hits_playlist_id
 
-# TODO: Refactor to O(n) 
 def get_artists(access_token):
     artists = []
     after = ''
@@ -116,9 +115,6 @@ def get_artists(access_token):
     if response.status_code == 200:
         items = response.json()['artists']['items']
 
-        for item in items:
-            artists.append(item['id'])
-
         total = response.json()['artists']['total']
         after = response.json()['artists']['cursors']['after']
 
@@ -128,13 +124,13 @@ def get_artists(access_token):
             response = requests.get(url = next_artists_url, headers = headers)
 
             if response.status_code == 200:
-                items = response.json()['artists']['items']
-
-                for item in items:
-                    artists.append(item['id'])
+                items += response.json()['artists']['items']
                 
                 total = response.json()['artists']['total']
                 after = response.json()['artists']['cursors']['after']
+
+        for item in items:
+            artists.append(item['id'])
 
     return artists
 
