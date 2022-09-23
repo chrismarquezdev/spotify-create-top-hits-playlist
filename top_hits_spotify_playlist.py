@@ -8,7 +8,7 @@ from flask import Flask, redirect, request as flask_request, render_template, se
 
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
-redirect_uri = 'http://127.0.0.1:5000/callback'
+redirect_uri = 'http://127.0.0.1:5000/generate-playlist'
 
 default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
 
@@ -29,11 +29,18 @@ def home():
         return redirect(get_auth_url())
 
 
-@app.route("/callback")
-def callback():
-    #TODO: Add error handling for spotify requests
+@app.route("/generate-playlist")
+def generate_playlist():
+    #TODO: Add error handling for spotify response
 
     auth_code = flask_request.args.get('code')
+    access_token = None, 
+    playlist_name = None, 
+    user_id = None, 
+    user_artists = None, 
+    artists_top_hits = None, 
+    top_hits_playlist_id = None, 
+    errors = None
 
     if auth_code:
         access_token = get_access_token(auth_code)
@@ -66,15 +73,18 @@ def callback():
 
 @app.route("/generated-playlist")
 def generated_playlist():
-    # TODO: redirect to home if accessToken expired
-    return render_template('index.html',
-                           isCallback=True if session.get('isCallback') else False,
-                           userAllowedAuth=True if session.get('userAllowedAuth') else False,
-                           validAccessToken=True if session.get('validAccessToken') else False,
-                           playlistName=session.get('playlistName') if session.get('playlistName') else '',
-                           numOfArtists=session.get('numOfArtists') if session.get('numOfArtists') else 0,
-                           numOfSongsToAdd=session.get('numOfSongsToAdd') if session.get('numOfSongsToAdd') else 0,
-                           errorsEncountered=session.get('errorsEncountered') if session.get('errorsEncountered') else [])
+    # TODO: add isAccessTokenExpired to handle case in html
+    if session.get('isCallback'):
+        return render_template('index.html',
+                            isCallback=True if session.get('isCallback') else False,
+                            userAllowedAuth=True if session.get('userAllowedAuth') else False,
+                            validAccessToken=True if session.get('validAccessToken') else False,
+                            playlistName=session.get('playlistName') if session.get('playlistName') else '',
+                            numOfArtists=session.get('numOfArtists') if session.get('numOfArtists') else 0,
+                            numOfSongsToAdd=session.get('numOfSongsToAdd') if session.get('numOfSongsToAdd') else 0,
+                            errorsEncountered=session.get('errorsEncountered') if session.get('errorsEncountered') else [])
+    else:
+        return redirect('/') 
 
 def get_auth_url():
     auth_url = 'https://accounts.spotify.com/authorize'
