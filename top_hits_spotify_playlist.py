@@ -10,7 +10,10 @@ client_secret = os.getenv('CLIENT_SECRET')
 redirect_uri = 'http://127.0.0.1:5000/callback'
 
 default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
+
+# TODO Replace Global vars with session storage
 user_defined_playlist_name = ''
+callbackVals = {}
 
 app = Flask(__name__)
 
@@ -28,6 +31,7 @@ def generate_playlist():
         user_defined_playlist_name = request.form['playlistName']
 
     return redirect(get_auth_url())
+
 
 @app.route("/callback")
 def callback():
@@ -51,15 +55,26 @@ def callback():
             # artists_top_hits = []
             # errors = []
 
-    return render_template('index.html',
-                           isCallback=True,
-                           userAllowedAuth=True if auth_code else False,
-                           validAccessToken=True if access_token else False,
-                           playlistName=playlist_name,
-                           numOfArtists=len(user_artists),
-                           numOfSongsToAdd=len(artists_top_hits),
-                           errorsEncountered=errors)
+    callbackVals['isCallback'] = True
+    callbackVals['userAllowedAuth'] = True if auth_code else False
+    callbackVals['validAccessToken'] = True if access_token else False
+    callbackVals['playlistName'] = playlist_name
+    callbackVals['numOfArtists'] = len(user_artists)
+    callbackVals['numOfSongsToAdd'] = len(artists_top_hits)
+    callbackVals['errorsEncountered'] = errors
 
+    return redirect('generated-playlist')
+
+@app.route("/generated-playlist")
+def generated_playlist():
+    return render_template('index.html',
+                           isCallback=True if callbackVals['isCallback'] else False,
+                           userAllowedAuth=True if callbackVals['userAllowedAuth'] else False,
+                           validAccessToken=True if callbackVals['validAccessToken'] else False,
+                           playlistName=callbackVals['playlistName'] if callbackVals['playlistName'] else '',
+                           numOfArtists=callbackVals['numOfArtists'] if callbackVals['numOfArtists'] else 0,
+                           numOfSongsToAdd=callbackVals['numOfSongsToAdd'] if callbackVals['numOfSongsToAdd'] else 0,
+                           errorsEncountered=callbackVals['errorsEncountered'] if callbackVals['errorsEncountered'] else [])
 
 def get_auth_url():
     auth_url = 'https://accounts.spotify.com/authorize'
