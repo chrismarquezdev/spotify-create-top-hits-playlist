@@ -1,4 +1,5 @@
 import base64
+from crypt import methods
 import requests
 import os
 from datetime import date
@@ -8,7 +9,8 @@ client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
 redirect_uri = 'http://127.0.0.1:5000/callback'
 
-playlist_name = f'My Artist\'s Top Hits {date.today().year }'
+default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
+user_defined_playlist_name = ''
 
 app = Flask(__name__)
 
@@ -19,28 +21,41 @@ def home():
                            isCallback=False,
                            authUrl=get_auth_url)
 
-@app.route("/generate-playlist")
+@app.route("/generate-playlist", methods=['POST'])
 def generate_playlist():
-    playlist_name = request.arg.get('form_name')
+    if request.form['playlistName']:
+        global user_defined_playlist_name 
+        user_defined_playlist_name = request.form['playlistName']
+
+    return redirect(get_auth_url())
 
 @app.route("/callback")
-def callback(playlist_name):
+def callback():
     auth_code = request.args.get('code')
 
     if auth_code:
         access_token = get_access_token(auth_code)
 
         if access_token:
+            playlist_name = user_defined_playlist_name if user_defined_playlist_name else default_playlist_name
+
             user_id = get_user_id(access_token)
             user_artists = get_artists(access_token)
-            artists_top_hits = get_top_hits(access_token, user_artists)
-            top_hits_playlist_id = create_top_hits_playlist(access_token, user_id, playlist_name)
-            errors = add_top_hits_to_playlist(access_token, top_hits_playlist_id, artists_top_hits)
+            if len(user_artists):
+                artists_top_hits = get_top_hits(access_token, user_artists)
+                top_hits_playlist_id = create_top_hits_playlist(access_token, user_id, playlist_name)
+                if len(artists_top_hits) and top_hits_playlist_id:
+                    errors = add_top_hits_to_playlist(access_token, top_hits_playlist_id, artists_top_hits)
+
+            # user_artists = []
+            # artists_top_hits = []
+            # errors = []
 
     return render_template('index.html',
                            isCallback=True,
                            userAllowedAuth=True if auth_code else False,
                            validAccessToken=True if access_token else False,
+                           playlistName=playlist_name,
                            numOfArtists=len(user_artists),
                            numOfSongsToAdd=len(artists_top_hits),
                            errorsEncountered=errors)
@@ -100,7 +115,7 @@ def get_user_id(access_token):
 
 
 def create_top_hits_playlist(access_token, user_id, playlist_name):
-    top_hits_playlist_id = ''
+    top_hits_playlist_id = None
     create_playlist_url = f'https://api.spotify.com/v1/users/{user_id}/playlists'
 
     headers = {'Authorization': f'Bearer {access_token}',

@@ -24,15 +24,16 @@
                 alt="Drake approves writing code">
         </figure>
         {% if not isCallback %}
-            <div class="container w-50">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Playlist Name" aria-label="Playlist Name" aria-describedby="button-addon2">
-                    <button class="btn btn-outline-primary" onclick="location.href='{{authUrl()}}'">
-                        Generate Top Hits Playlist
-                    </button>
-                </div>
+            <div class="container w-50">    
+                <form action="{{ url_for('generate_playlist') }}" method=post>
+                    <div class="input-group mb-3">
+                        <input name="playlistName" type="text" class="form-control" placeholder="Playlist Name" aria-label="Playlist Name" aria-describedby="button-addon2">
+                        <button class="btn btn-outline-primary">
+                            Generate Top Hits Playlist
+                        </button>
+                    </div>
+                </form>
             </div>
-            
         {% endif %}
     </div>
     {% if isCallback %}
@@ -40,7 +41,11 @@
             <p class="lead text-center">You allowed access: {{userAllowedAuth}}</p>
             <p class="lead text-center">Dumb Python Program able to get access: {{validAccessToken}}</p>
             <p class="lead text-center">Number of Artists you follow: {{numOfArtists}}</p>
-            <p class="lead text-center">Number of Songs dumb Python Program will try to add to new playlist: {{numOfSongsToAdd}}</p>
+            {% if numOfArtists > 0 %}
+                <p class="lead text-center">Generated playlist '{{playlistName}}' with {{numOfSongsToAdd}} songs</p>
+            {% else %}
+                <p class="lead text-center">Can't create the playlist if you don't follow artists!</p>
+            {% endif %}
             {% if errorsEncountered %}
                 <p class="lead text-center">Encountered the following errors when trying to add songs to playlist:</p>
                 {% for error in errorsEncountered %}
