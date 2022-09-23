@@ -13,8 +13,8 @@ redirect_uri = 'http://127.0.0.1:5000/callback'
 default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
 
 app = Flask(__name__)
-
 app.secret_key = secrets.token_hex()
+
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -28,8 +28,11 @@ def home():
 
         return redirect(get_auth_url())
 
+
 @app.route("/callback")
 def callback():
+    #TODO: Add error handling for spotify requests
+
     auth_code = flask_request.args.get('code')
 
     if auth_code:
@@ -59,6 +62,7 @@ def callback():
     session['errorsEncountered'] = errors
 
     return redirect('generated-playlist')
+
 
 @app.route("/generated-playlist")
 def generated_playlist():
