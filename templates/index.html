@@ -25,7 +25,7 @@
         </figure>
         {% if not isCallback %}
             <div class="container w-50">    
-                <form action="{{ url_for('generate_playlist') }}" method=post>
+                <form action="{{ url_for('home') }}" method=post>
                     <div class="input-group mb-3">
                         <input name="playlistName" type="text" class="form-control" placeholder="Playlist Name" aria-label="Playlist Name" aria-describedby="button-addon2">
                         <button class="btn btn-outline-primary">

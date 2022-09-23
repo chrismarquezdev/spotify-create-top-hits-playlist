@@ -16,19 +16,17 @@ app = Flask(__name__)
 
 app.secret_key = secrets.token_hex()
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def home():
-    return render_template('index.html',
-                           isCallback=False,
-                           authUrl=get_auth_url)
+    if flask_request.method == 'GET':
+        return render_template('index.html',
+                            isCallback=False,
+                            authUrl=get_auth_url)
+    else:
+        if flask_request.form['playlistName']:
+            session['user_defined_playlist_name'] = flask_request.form['playlistName']
 
-@app.route("/generate-playlist", methods=['POST'])
-def generate_playlist():
-    if flask_request.form['playlistName']:
-        session['user_defined_playlist_name'] = flask_request.form['playlistName']
-
-    return redirect(get_auth_url())
-
+        return redirect(get_auth_url())
 
 @app.route("/callback")
 def callback():
