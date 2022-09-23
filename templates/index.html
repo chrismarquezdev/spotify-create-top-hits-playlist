@@ -61,16 +61,16 @@
             </div>
         {% else %}
             <div class="container mx-auto text-center">
+               
                 <figure>
+                    {% if numOfArtists > 0 and numOfSongsToAdd > 0 %}
                     <img src="/static/images/homerSimpsonBackFat.png" class="figure-img img-fluid rounded" width="600"
                         alt="Home Simpson Back Fat">
+                    {% else %}
+                    <img src="/static/images/surprisedPikachu.jpeg" class="figure-img img-fluid rounded" width="200"
+                        alt="Surprised Pikachu">
+                    {% endif %}
                 </figure>
-                <p class="lead text-center">
-                    You allowed access: {{userAllowedAuth}}
-                </p>
-                <p class="lead text-center">
-                    Dumb Python Program able to get access: {{validAccessToken}}
-                </p>
                 <p class="lead text-center">
                     Number of Artists you follow: {{numOfArtists}}
                 </p>

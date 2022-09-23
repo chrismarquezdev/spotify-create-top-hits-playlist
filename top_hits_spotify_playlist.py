@@ -68,6 +68,8 @@ def generate_playlist():
     session['numOfSongsToAdd'] = len(artists_top_hits)
     session['errorsEncountered'] = errors
 
+    print(f'Artists top hits {artists_top_hits}')
+
     return redirect('generated-playlist')
 
 
