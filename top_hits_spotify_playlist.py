@@ -2,8 +2,9 @@ import base64
 from crypt import methods
 import requests
 import os
+import secrets
 from datetime import date
-from flask import Flask, redirect, request, render_template
+from flask import Flask, redirect, request as flask_request, render_template, session 
 
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
@@ -11,12 +12,9 @@ redirect_uri = 'http://127.0.0.1:5000/callback'
 
 default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
 
-# TODO Replace Global vars with session storage
-user_defined_playlist_name = ''
-callbackVals = {}
-
 app = Flask(__name__)
 
+app.secret_key = secrets.token_hex()
 
 @app.route("/")
 def home():
@@ -26,22 +24,21 @@ def home():
 
 @app.route("/generate-playlist", methods=['POST'])
 def generate_playlist():
-    if request.form['playlistName']:
-        global user_defined_playlist_name 
-        user_defined_playlist_name = request.form['playlistName']
+    if flask_request.form['playlistName']:
+        session['user_defined_playlist_name'] = flask_request.form['playlistName']
 
     return redirect(get_auth_url())
 
 
 @app.route("/callback")
 def callback():
-    auth_code = request.args.get('code')
+    auth_code = flask_request.args.get('code')
 
     if auth_code:
         access_token = get_access_token(auth_code)
 
         if access_token:
-            playlist_name = user_defined_playlist_name if user_defined_playlist_name else default_playlist_name
+            playlist_name = session.get('user_defined_playlist_name') if session.get('user_defined_playlist_name') else default_playlist_name
 
             user_id = get_user_id(access_token)
             user_artists = get_artists(access_token)
@@ -55,26 +52,27 @@ def callback():
             # artists_top_hits = []
             # errors = []
 
-    callbackVals['isCallback'] = True
-    callbackVals['userAllowedAuth'] = True if auth_code else False
-    callbackVals['validAccessToken'] = True if access_token else False
-    callbackVals['playlistName'] = playlist_name
-    callbackVals['numOfArtists'] = len(user_artists)
-    callbackVals['numOfSongsToAdd'] = len(artists_top_hits)
-    callbackVals['errorsEncountered'] = errors
+    session['isCallback'] = True
+    session['userAllowedAuth'] = True if auth_code else False
+    session['validAccessToken'] = True if access_token else False
+    session['playlistName'] = playlist_name
+    session['numOfArtists'] = len(user_artists)
+    session['numOfSongsToAdd'] = len(artists_top_hits)
+    session['errorsEncountered'] = errors
 
     return redirect('generated-playlist')
 
 @app.route("/generated-playlist")
 def generated_playlist():
+    # TODO: redirect to home if accessToken expired
     return render_template('index.html',
-                           isCallback=True if callbackVals['isCallback'] else False,
-                           userAllowedAuth=True if callbackVals['userAllowedAuth'] else False,
-                           validAccessToken=True if callbackVals['validAccessToken'] else False,
-                           playlistName=callbackVals['playlistName'] if callbackVals['playlistName'] else '',
-                           numOfArtists=callbackVals['numOfArtists'] if callbackVals['numOfArtists'] else 0,
-                           numOfSongsToAdd=callbackVals['numOfSongsToAdd'] if callbackVals['numOfSongsToAdd'] else 0,
-                           errorsEncountered=callbackVals['errorsEncountered'] if callbackVals['errorsEncountered'] else [])
+                           isCallback=True if session.get('isCallback') else False,
+                           userAllowedAuth=True if session.get('userAllowedAuth') else False,
+                           validAccessToken=True if session.get('validAccessToken') else False,
+                           playlistName=session.get('playlistName') if session.get('playlistName') else '',
+                           numOfArtists=session.get('numOfArtists') if session.get('numOfArtists') else 0,
+                           numOfSongsToAdd=session.get('numOfSongsToAdd') if session.get('numOfSongsToAdd') else 0,
+                           errorsEncountered=session.get('errorsEncountered') if session.get('errorsEncountered') else [])
 
 def get_auth_url():
     auth_url = 'https://accounts.spotify.com/authorize'
