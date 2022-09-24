@@ -67,9 +67,7 @@ def generate_playlist():
     session['numOfArtists'] = len(user_artists)
     session['numOfSongsToAdd'] = len(artists_top_hits)
     session['errorsEncountered'] = errors
-
-    print(f'Artists top hits {artists_top_hits}')
-
+    
     return redirect('generated-playlist')
 
 
@@ -133,8 +131,12 @@ def get_user_id(access_token):
     response = requests.get(url=create_playlist_url, headers=headers)
 
     if response.status_code != 200:
-        error_message = response.json()['error']['message']
-        user_id = f' error message: {error_message}'
+        # Spotify endpoint doesn't always return a body with the error object for some reason...
+        if 'error' in response.text:
+            error_message = response.json()['error']['message']
+            user_id = f' error message: {error_message}'
+        else:
+            user_id = f' error message: {response.text}'
     else:
         user_id = response.json()['id']
 
@@ -217,10 +219,12 @@ def add_top_hits_to_playlist(access_token, playlist_id, top_hits):
     uris = []
     errors = []
 
-    for top_hit in top_hits:
+    for index, top_hit in enumerate(top_hits):
+
         uris.append(top_hit)
 
-        if len(uris) > 99:
+        # add tracks to playlist if 100 tracks are in uris OR if on the last track
+        if len(uris) > 99 or (index + 1 == len(top_hits)):
             json = {'uris': uris}
             response = requests.post(
                 url=add_items_to_playlist_url, headers=headers, json=json)
