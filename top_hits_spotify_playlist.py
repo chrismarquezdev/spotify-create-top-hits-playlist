@@ -29,6 +29,7 @@ def home():
         return redirect(get_auth_url())
 
 
+# Spotify calls this endpoint on success/failure of Authentication
 @app.route("/generate-playlist")
 def generate_playlist():
     #TODO: Add error handling for spotify response
@@ -85,6 +86,7 @@ def generated_playlist():
                             errorsEncountered=session.get('errorsEncountered') if session.get('errorsEncountered') else [])
     else:
         return redirect('/') 
+
 
 def get_auth_url():
     auth_url = 'https://accounts.spotify.com/authorize'
