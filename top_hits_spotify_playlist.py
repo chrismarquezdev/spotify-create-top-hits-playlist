@@ -1,5 +1,4 @@
 import base64
-from crypt import methods
 import requests
 import os
 import secrets
@@ -10,7 +9,7 @@ client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
 redirect_uri = 'http://127.0.0.1:5000/generate-playlist'
 
-default_playlist_name = f'My Artist\'s Top Hits {date.today().year }'
+default_playlist_name = f'My Artist\'s Top Hits {date.today().year}'
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex()
