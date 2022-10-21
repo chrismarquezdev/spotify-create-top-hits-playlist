@@ -8,7 +8,7 @@ Run the following to get the dependencies installed
   pip install -r requirements.txt
 ```
 
-Add a .env file to root with the following defined from your Spotify App:
+Add a .env file to root of project with the following defined from your Spotify App:
 - CLIENT_ID = ''
 - CLIENT_SECRET = ''
 
